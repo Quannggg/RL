@@ -10,7 +10,9 @@ export class RateLimitService {
   private slidingSha!: string;
   private bucketSha!: string;
 
-  constructor(private readonly redis: RedisService) {
+  constructor(private readonly redis: RedisService) {}
+
+  async onModuleInit() {
     // Load & script load to get SHA for EVALSHA
     const client = this.redis.getClient();
 
@@ -23,12 +25,8 @@ export class RateLimitService {
       'utf8',
     );
 
-    void client
-      .script('LOAD', sliding)
-      .then((sha) => (this.slidingSha = sha as string));
-    void client
-      .script('LOAD', bucket)
-      .then((sha) => (this.bucketSha = sha as string));
+    this.slidingSha = (await client.script('LOAD', sliding)) as string;
+    this.bucketSha = (await client.script('LOAD', bucket)) as string;
   }
 
   private key(routeKey: string) {
