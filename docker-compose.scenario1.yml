@@ -1,0 +1,31 @@
+services:
+  # 1. Dịch vụ NestJS (Direct)
+  nestjs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Đổi tên container để tránh xung đột với kịch bản 2
+    container_name: nestjs_app_s1
+    ports:
+      # Ánh xạ cổng 8080 của máy host
+      # VÀO cổng 3000 của container NestJS
+      - "8080:3000"
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    networks:
+      - app-network-s1
+
+  # 2. Dịch vụ Redis
+  redis:
+    image: redis:7
+    # Đổi tên container
+    container_name: redis_s1
+    networks:
+      - app-network-s1
+
+networks:
+  app-network-s1:
+    driver: bridge
