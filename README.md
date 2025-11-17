@@ -15,7 +15,7 @@ docker-compose -f docker-compose.scenario1.yml down
 # Test scenario 2
 
 ```
-docker-compose -f docker-compose.scenario22.yml up --build -d
+docker-compose -f docker-compose.scenario2.yml up --build -d
 k6 run k6_script.js
 docker-compose -f docker-compose.scenario2.yml down
 ```
