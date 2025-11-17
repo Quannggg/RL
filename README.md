@@ -38,6 +38,17 @@ src/
     └── demo.controller.ts                      # Demo endpoints
 ```
 
+
+## 🏗️ Sơ Đồ Kiến Trúc
+
+Sơ đồ dưới đây mô tả luồng hoạt động và mối quan hệ giữa các thành phần chính trong framework Rate Limiting sau khi được tái cấu trúc với các Design Patterns.
+
+![alt text](assets/architecture-diagram.jpg)
+
+*   **Context (`RateLimitGuard`):** Đóng vai trò điều phối chính.
+*   **Strategy & Factory Pattern:** Cho phép đóng gói và lựa chọn linh hoạt các thuật toán (`SlidingWindow`, `TokenBucket`).
+*   **Observer Pattern:** Tách rời logic xử lý khi một request bị chặn (ví dụ: ghi log, gửi cảnh báo) thông qua hệ thống sự kiện.
+
 ## 🚀 Quick Start
 
 ### 1. Cài Đặt Dependencies
