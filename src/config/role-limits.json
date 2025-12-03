@@ -1,0 +1,11 @@
+{
+  "default": { "limit": 5, "perSeconds": 60 },
+  "guest":   { "limit": 5, "perSeconds": 60 },
+  "premium": { "limit": 100, "perSeconds": 60 },
+  "routes": {
+    "GET:/demo/sliding": {
+      "guest": { "limit": 5, "perSeconds": 60 },
+      "premium": { "limit": 50, "perSeconds": 60 }
+    }
+  }
+}

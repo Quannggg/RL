@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Rate Limit Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>body{font-family: Arial; padding:20px}</style>
+</head>
+<body>
+  <h2>Rate Limit Monitoring</h2>
+  <div>Total blocks: <span id="total">0</span></div>
+  <canvas id="lineChart" width="800" height="200"></canvas>
+  <canvas id="barChart" width="400" height="200"></canvas>
+
+  <script>
+    const lineCtx = document.getElementById('lineChart').getContext('2d');
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    let lineChart = null, barChart = null;
+
+    async function update() {
+      const res = await fetch('/monitoring');
+      const data = await res.json();
+      document.getElementById('total').innerText = data.total || 0;
+
+      const buckets = data.series || [];
+      const labels = buckets.map(b => b.bucket);
+      const values = buckets.map(b => {
+        let sum = 0;
+        for (const k in b.data) sum += Number(b.data[k]||0);
+        return sum;
+      });
+
+      if (!lineChart) {
+        lineChart = new Chart(lineCtx, { type:'line', data:{ labels, datasets:[{ label:'blocked per bucket', data: values }] } });
+      } else {
+        lineChart.data.labels = labels;
+        lineChart.data.datasets[0].data = values;
+        lineChart.update();
+      }
+
+      const top = data.topIps || [];
+      const ipLabels = top.map(t => t.ip);
+      const ipValues = top.map(t => t.count);
+
+      if (!barChart) {
+        barChart = new Chart(barCtx, { type:'bar', data:{ labels: ipLabels, datasets:[{ label:'blocked', data: ipValues }] } });
+      } else {
+        barChart.data.labels = ipLabels;
+        barChart.data.datasets[0].data = ipValues;
+        barChart.update();
+      }
+    }
+
+    setInterval(update, 2000);
+    update();
+  </script>
+</body>
+</html>
