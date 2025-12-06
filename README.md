@@ -49,6 +49,77 @@ Sơ đồ dưới đây mô tả luồng hoạt động và mối quan hệ gi�
 *   **Strategy & Factory Pattern:** Cho phép đóng gói và lựa chọn linh hoạt các thuật toán (`SlidingWindow`, `TokenBucket`).
 *   **Observer Pattern:** Tách rời logic xử lý khi một request bị chặn (ví dụ: ghi log, gửi cảnh báo) thông qua hệ thống sự kiện.
 
+## Dynamic Role-Based Rate Limiting (Phần bổ sung)
+### Mục tiêu
+
+Cho phép hệ thống rate limit theo từng vai trò người dùng, ví dụ:
+
+Guest:	5 req / phút
+Premium:	100 req / phút
+Default:	5 req / phút
+
+Config được đặt trong:
+src/config/role-limit.json
+
+Ví dụ:
+
+```
+{
+  "default": { "limit": 5, "perSeconds": 60 },
+  "guest":   { "limit": 5, "perSeconds": 60 },
+  "premium": { "limit": 100, "perSeconds": 60 },
+  "routes": {
+    "GET:/demo/sliding": {
+      "guest": { "limit": 5, "perSeconds": 60 },
+      "premium": { "limit": 50, "perSeconds": 60 }
+    }
+  }
+}
+```
+
+Role được truyền qua header:
+```
+x-user-role: guest
+x-user-role: premium
+```
+
+## Monitoring API & Dashboard
+### API: /monitoring
+
+Trả về dữ liệu realtime từ Redis:
+```
+{
+  "total": 12,
+  "byRoute": {},
+  "topIps": [],
+  "series": []
+}
+```
+### Dashboard
+
+Truy cập tại:
+
+http://localhost:3000/monitor.html
+
+
+Dashboard hiển thị:
+
+- Tổng số request bị chặn
+- Top IP bị block
+- Block theo route
+- Biểu đồ line chart theo thời gian thực (mỗi phút 1 bucket)
+
+![alt text](assets/dashboard1.png)
+![alt text](assets/dashboard2.png)
+
+### Test Guest — bị block theo đúng role limit
+ 
+![alt text](assets/guest.png)
+
+### Test Premium — không bị block
+
+![alt text](assets/premium.png)
+
 ## 🚀 Quick Start
 
 ### 1. Cài Đặt Dependencies
