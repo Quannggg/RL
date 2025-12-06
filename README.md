@@ -34,6 +34,12 @@ src/
 │   └── rate-limit.module.ts                    # Module
 ├── redis/
 │   └── redis.module.ts                         # Redis connection
+├── monitoring/                                 # Module for dashboard + API
+│   ├── monitoring.controller.ts
+│   ├── monitoring.module.ts
+│   └── monitoring.service.ts
+├── public/                                     # Dashboard
+│   └── monitor.html
 └── demo/
     └── demo.controller.ts                      # Demo endpoints
 ```
@@ -49,7 +55,7 @@ Sơ đồ dưới đây mô tả luồng hoạt động và mối quan hệ gi�
 *   **Strategy & Factory Pattern:** Cho phép đóng gói và lựa chọn linh hoạt các thuật toán (`SlidingWindow`, `TokenBucket`).
 *   **Observer Pattern:** Tách rời logic xử lý khi một request bị chặn (ví dụ: ghi log, gửi cảnh báo) thông qua hệ thống sự kiện.
 
-## Dynamic Role-Based Rate Limiting (Phần bổ sung)
+## Dynamic Role-Based Rate Limiting
 ### Mục tiêu
 
 Cho phép hệ thống rate limit theo từng vai trò người dùng, ví dụ:
