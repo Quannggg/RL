@@ -59,10 +59,9 @@ Sơ đồ dưới đây mô tả luồng hoạt động và mối quan hệ gi�
 ### Mục tiêu
 
 Cho phép hệ thống rate limit theo từng vai trò người dùng, ví dụ:
-
-Guest:	5 req / phút
-Premium:	100 req / phút
-Default:	5 req / phút
+- Guest:	5 req / phút
+- Premium:	100 req / phút
+- Default:	5 req / phút
 
 Config được đặt trong:
 src/config/role-limit.json
