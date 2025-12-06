@@ -88,6 +88,18 @@ x-user-role: guest
 x-user-role: premium
 ```
 
+## Request Handling Improvement with Queueing
+### Kịch bản test:
+Mô phỏng việc gửi 15 đơn hàng vào một API có giới hạn 10 đơn hàng/giây.
+
+Kịch bản 1: Hệ thống chỉ xử lý đúng bằng giới hạn 10 đơn/giây.
+Khi vượt quá ngưỡng, các yêu cầu dư bị loại bỏ.
+
+![alt text](assets/no_queue.png)
+
+Kịch bản 2: Hệ thống được bổ sung hàng đợi (Queue) để lưu lại các đơn hàng vượt ngưỡng
+![alt text](assets/queue.png)
+
 ## Monitoring API & Dashboard
 ### API: /monitoring
 

@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards, Body } from '@nestjs/common';
 import {
   RateLimit,
   RateLimitOptions,
@@ -28,5 +28,40 @@ export class DemoController {
   } as RateLimitOptions) //bucket of 10, refilling 5 tokens
   bucket() {
     return { ok: true, algo: 'token-bucket' };
+  }
+
+  @Post('orders')
+  @RateLimit({
+    strategy: 'sliding-window',
+    limit: 10,
+    windowMs: 1000, // 10 requests per second
+    enableQueue: true, // Enable queue for important requests
+    queuePriority: 1, // Higher priority for orders
+  })
+  createOrder(@Body() body: any) {
+    return {
+      ok: true,
+      message: 'Order created successfully',
+      orderId: `ORD-${Date.now()}`,
+      data: body,
+      processedAt: new Date().toISOString(),
+    };
+  }
+
+  @Post('orders-no-queue')
+  @RateLimit({
+    strategy: 'sliding-window',
+    limit: 10,
+    windowMs: 1000, // 10 requests per second
+    enableQueue: false, // NO QUEUE - Old system behavior
+  })
+  createOrderNoQueue(@Body() body: any) {
+    return {
+      ok: true,
+      message: 'Order created successfully',
+      orderId: `ORD-${Date.now()}`,
+      data: body,
+      processedAt: new Date().toISOString(),
+    };
   }
 }

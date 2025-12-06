@@ -1,12 +1,21 @@
-import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+  HttpStatus,
+  HttpException,
+  Optional,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { RATE_LIMIT_META, RateLimitOptions } from './rate-limit.decorator';
 import { RateLimitStrategyFactory } from './rate-limit-strategy.factory';
 import { TooManyRequestsException } from '../common/exceptions/too-many-requests.exception';
 import { getRoleFromRequest } from '../utils/get-role';
 import roleLimits from '../config/role-limits.json';
+import { QueueService } from '../queue/queue.service';
 
 @Injectable()
 export class RateLimitGuard implements CanActivate {
@@ -16,6 +25,7 @@ export class RateLimitGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly strategyFactory: RateLimitStrategyFactory,
     private readonly eventEmitter: EventEmitter2,
+    @Optional() private readonly queueService?: QueueService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -68,14 +78,86 @@ export class RateLimitGuard implements CanActivate {
       const ip =
         (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
         req.ip ||
+        req.socket.remoteAddress ||
         'unknown';
       const eventRoute = `${req.method}:${fullPath}:${ip}`;
 
-      this.eventEmitter.emit('rate_limit.blocked', { ip, route: eventRoute, role, timestamp: Date.now() });
+      // If queue is enabled, add request to queue instead of throwing error
+      if (opts.enableQueue && this.queueService) {
+        try {
+          const res = context.switchToHttp().getResponse<Response>();
+          const routeKey = `${req.method}:${fullPath}:${ip}`;
 
-      this.logger.warn(`RateLimit: blocked ip=${ip} role=${role} route=${fullPath}`);
+          const { jobId, position } = await this.queueService.addRequestToQueue(
+            {
+              method: req.method,
+              path: fullPath,
+              body: req.body,
+              query: req.query,
+              params: req.params,
+              headers: req.headers as Record<string, string>,
+              ip,
+              routeKey,
+              rateLimitOptions: opts,
+            },
+            {
+              priority: opts.queuePriority || 0,
+            },
+          );
 
-      throw new TooManyRequestsException();
+          // Return 202 Accepted with job info
+          res.status(HttpStatus.ACCEPTED).json({
+            message: 'Request queued for processing',
+            jobId,
+            position,
+            queuedAt: new Date().toISOString(),
+          });
+
+          this.logger.log(
+            `RateLimit: Request queued ip=${ip} role=${role} route=${fullPath} jobId=${jobId} position=${position}`,
+          );
+
+          return false; // Prevent further execution
+        } catch (error) {
+          // If queue is full or error, fall back to 429
+          if (error instanceof Error && error.message.includes('full')) {
+            this.eventEmitter.emit('rate_limit.blocked', {
+              ip,
+              route: eventRoute,
+              role,
+              timestamp: Date.now(),
+            });
+
+            this.logger.warn(
+              `RateLimit: blocked (queue full) ip=${ip} role=${role} route=${fullPath}`,
+            );
+
+            throw new HttpException(
+              {
+                statusCode: HttpStatus.TOO_MANY_REQUESTS,
+                message: 'Rate limit exceeded and queue is full',
+                error: 'Too Many Requests',
+              },
+              HttpStatus.TOO_MANY_REQUESTS,
+            );
+          }
+          throw new TooManyRequestsException();
+        }
+      } else {
+        // No queue enabled, throw 429 as before
+        this.eventEmitter.emit('rate_limit.blocked', {
+          ip,
+          route: eventRoute,
+          role,
+          timestamp: Date.now(),
+        });
+
+        this.logger.warn(
+          `RateLimit: blocked ip=${ip} role=${role} route=${fullPath}`,
+        );
+
+        throw new TooManyRequestsException();
+      }
     }
 
     return true;

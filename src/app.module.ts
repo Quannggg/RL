@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { RedisModule } from './redis/redis.module';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
+import { QueueModule } from './queue/queue.module';
 import { DemoController } from './demo/demo.controller';
 import { RateLimitListener } from './rate-limit/listeners/rate-limit.listener';
 import { MonitoringModule } from './monitoring/monitoring.module';
@@ -15,6 +16,7 @@ import { RateLimitStrategyFactory } from './rate-limit/rate-limit-strategy.facto
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     RedisModule,
+    QueueModule,
     RateLimitModule,
     MonitoringModule,
     ServeStaticModule.forRoot({
