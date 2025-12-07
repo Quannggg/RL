@@ -7,7 +7,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   private client!: Redis; 
 
   async onModuleInit() {
-    const url = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+    // const url = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+    const host = process.env.REDIS_HOST || '127.0.0.1';
+    const port = process.env.REDIS_PORT || 6379;
+
+    const url = `redis://${host}:${port}`;
     this.client = new Redis(url);
     this.logger.log(`Connected to Redis: ${url}`);
     // Optional: handle error events

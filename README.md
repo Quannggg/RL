@@ -54,6 +54,21 @@ Sơ đồ dưới đây mô tả luồng hoạt động và mối quan hệ gi�
 *   **Context (`RateLimitGuard`):** Đóng vai trò điều phối chính.
 *   **Strategy & Factory Pattern:** Cho phép đóng gói và lựa chọn linh hoạt các thuật toán (`SlidingWindow`, `TokenBucket`).
 *   **Observer Pattern:** Tách rời logic xử lý khi một request bị chặn (ví dụ: ghi log, gửi cảnh báo) thông qua hệ thống sự kiện.
+## NGINX Gateway
+Cấu hình NGINX để hoạt động như một reverse proxy đứng trước toàn hệ thống.
+### Kịch bản test:
+Sử dụng 2000 người dùng ảo tấn công hệ thống trong liên tục 30 giây
+
+Kịch bản 1: Khi không có NGINX
+
+![alt text](assets/NGINX1.png)
+
+![alt text](assets/performance1.png)
+Kịch bản 2: Khi có NGINX
+
+![alt text](assets/NGINX2.png)
+![alt text](assets/performance2.png)
+
 
 ## Dynamic Role-Based Rate Limiting
 ### Mục tiêu

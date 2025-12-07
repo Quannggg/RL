@@ -3,7 +3,7 @@ import { check } from 'k6';
 
 export const options = {
   // 200 người dùng ảo đồng thời
-  vus: 200,
+  vus: 2000,
   // Tấn công liên tục trong 30 giây
   duration: '30s',
 };
