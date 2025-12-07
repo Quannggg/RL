@@ -1,10 +1,13 @@
 export class UserBlockedPayload {
   ip: string;
-  routeKey: string;
+  route: string;
+  role: string;
+  timestamp?: number;
 
-  constructor(ip: string, routeKey: string) {
+  constructor(ip: string, route: string, role: string, timestamp?: number) {
     this.ip = ip;
-    this.routeKey = routeKey;
+    this.route = route;
+    this.role = role;
+    this.timestamp = timestamp;
   }
 }
-

@@ -35,43 +35,37 @@ export class RateLimitGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<Request>();
     const role = getRoleFromRequest(req) || 'default';
 
-    // build "full path" safely: controller prefix + route path if available
-    // req.baseUrl is controller prefix, req.route.path is handler path (often '/sliding')
+    // Build full route path: controller prefix + handler path
     const prefix = req.baseUrl || '';
     const handlerPath = req.route?.path ?? req.path ?? req.originalUrl ?? '';
     const fullPath = prefix + handlerPath;
     const routeKey = `${req.method}:${fullPath}`; // e.g. GET:/demo/sliding
 
-    // find config
+    // Find rate limit config for route and role
     const routeCfg = (roleLimits as any).routes?.[routeKey];
     const cfg = (routeCfg && routeCfg[role]) || (roleLimits as any)[role] || (roleLimits as any).default || { limit: 5, perSeconds: 60 };
     const limit = cfg.limit ?? 5;
     const perSeconds = cfg.perSeconds ?? 60;
 
-    // DEBUG logs — sẽ in ra terminal để bạn biết đang dùng gì
+    // Debug: log request and selected config
     this.logger.debug(`RateLimitGuard: request ${req.method} ${fullPath}, ip=${req.ip}, role=${role}`);
     this.logger.debug(`Selected cfg for routeKey=${routeKey} => ${JSON.stringify(cfg)}`);
 
-    // Ensure opts carries runtime info (both for factory and for strategy)
+    // Merge runtime config into options
     const optsWithRuntime: RateLimitOptions & { runtime?: { limit: number; perSeconds: number; role: string } } = {
       ...opts,
-      // also override any hardcoded limit in opts
       ...(opts as any),
       runtime: { limit, perSeconds, role },
     };
 
-    // Force override commonly-used fields if present
+    // Override limit fields with runtime values
     try {
-      // if opts has 'limit' field used by strategies, override it
       (optsWithRuntime as any).limit = limit;
       (optsWithRuntime as any).perSeconds = perSeconds;
     } catch (e) { /* ignore */ }
 
-    // create strategy; prefer factory that accepts runtime (some factories may not, so fallback)
-    let strategy;
-    strategy = this.strategyFactory.create(opts.strategy);
-
-    // call isAllowed with the optsWithRuntime (so strategy can read runtime override)
+    // Get strategy from factory and check rate limit
+    const strategy = this.strategyFactory.create(opts.strategy);
     const allowed = await strategy.isAllowed(context, optsWithRuntime);
 
     if (!allowed) {
@@ -82,7 +76,7 @@ export class RateLimitGuard implements CanActivate {
         'unknown';
       const eventRoute = `${req.method}:${fullPath}:${ip}`;
 
-      // If queue is enabled, add request to queue instead of throwing error
+      // Queue request if enabled, otherwise throw 429
       if (opts.enableQueue && this.queueService) {
         try {
           const res = context.switchToHttp().getResponse<Response>();
@@ -105,7 +99,7 @@ export class RateLimitGuard implements CanActivate {
             },
           );
 
-          // Return 202 Accepted with job info
+          // Return 202 Accepted with queue info
           res.status(HttpStatus.ACCEPTED).json({
             message: 'Request queued for processing',
             jobId,
@@ -117,9 +111,9 @@ export class RateLimitGuard implements CanActivate {
             `RateLimit: Request queued ip=${ip} role=${role} route=${fullPath} jobId=${jobId} position=${position}`,
           );
 
-          return false; // Prevent further execution
+          return false; // Block request execution
         } catch (error) {
-          // If queue is full or error, fall back to 429
+          // Fallback to 429 if queue is full
           if (error instanceof Error && error.message.includes('full')) {
             this.eventEmitter.emit('rate_limit.blocked', {
               ip,
@@ -144,7 +138,7 @@ export class RateLimitGuard implements CanActivate {
           throw new TooManyRequestsException();
         }
       } else {
-        // No queue enabled, throw 429 as before
+        // Emit event and throw 429
         this.eventEmitter.emit('rate_limit.blocked', {
           ip,
           route: eventRoute,
