@@ -70,6 +70,7 @@ describe('RateLimitGuard', () => {
           baseUrl: '',
           path: '/demo/sliding',
           headers,
+          socket: { remoteAddress: ip },
         }),
       }),
     } as any;
@@ -104,7 +105,14 @@ describe('RateLimitGuard', () => {
 
     expect(result).toBe(true);
     expect(strategyFactory.create).toHaveBeenCalledWith('sliding-window');
-    expect(mockStrategy.isAllowed).toHaveBeenCalledWith(context, options);
+    expect(mockStrategy.isAllowed).toHaveBeenCalledWith(
+      context,
+      expect.objectContaining({
+        strategy: 'sliding-window',
+        limit: expect.any(Number),
+        windowMs: 10000,
+      }),
+    );
     expect(eventEmitter.emit).not.toHaveBeenCalled();
   });
 
@@ -127,7 +135,9 @@ describe('RateLimitGuard', () => {
       'rate_limit.blocked',
       expect.objectContaining({
         ip: '127.0.0.1',
-        routeKey: 'GET:/demo/sliding:127.0.0.1',
+        route: 'GET:/demo/sliding:127.0.0.1',
+        role: expect.any(String),
+        timestamp: expect.any(Number),
       }),
     );
   });
@@ -154,7 +164,9 @@ describe('RateLimitGuard', () => {
       'rate_limit.blocked',
       expect.objectContaining({
         ip: '203.0.113.1',
-        routeKey: 'GET:/demo/sliding:203.0.113.1',
+        route: 'GET:/demo/sliding:203.0.113.1',
+        role: expect.any(String),
+        timestamp: expect.any(Number),
       }),
     );
   });
@@ -169,6 +181,7 @@ describe('RateLimitGuard', () => {
           baseUrl: '',
           path: '/demo/sliding',
           headers: {},
+          socket: {},
         }),
       }),
     } as any;
@@ -190,7 +203,9 @@ describe('RateLimitGuard', () => {
       'rate_limit.blocked',
       expect.objectContaining({
         ip: 'unknown',
-        routeKey: 'GET:/demo/sliding:unknown',
+        route: 'GET:/demo/sliding:unknown',
+        role: expect.any(String),
+        timestamp: expect.any(Number),
       }),
     );
   });
