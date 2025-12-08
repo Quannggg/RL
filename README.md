@@ -69,6 +69,17 @@ Kịch bản 2: Khi có NGINX
 ![alt text](assets/NGINX2.png)
 ![alt text](assets/performance2.png)
 
+## Request Handling Improvement with Queueing
+### Kịch bản test:
+Mô phỏng việc gửi 15 đơn hàng vào một API có giới hạn 10 đơn hàng/giây.
+
+Kịch bản 1: Hệ thống chỉ xử lý đúng bằng giới hạn 10 đơn/giây.
+Khi vượt quá ngưỡng, các yêu cầu dư bị loại bỏ.
+
+![alt text](assets/no_queue.png)
+
+Kịch bản 2: Hệ thống được bổ sung hàng đợi (Queue) để lưu lại các đơn hàng vượt ngưỡng
+![alt text](assets/queue.png)
 
 ## Dynamic Role-Based Rate Limiting
 ### Mục tiêu
@@ -91,7 +102,7 @@ Ví dụ:
   "routes": {
     "GET:/demo/sliding": {
       "guest": { "limit": 5, "perSeconds": 60 },
-      "premium": { "limit": 50, "perSeconds": 60 }
+      "premium": { "limit": 100, "perSeconds": 60 }
     }
   }
 }
@@ -103,17 +114,21 @@ x-user-role: guest
 x-user-role: premium
 ```
 
-## Request Handling Improvement with Queueing
-### Kịch bản test:
-Mô phỏng việc gửi 15 đơn hàng vào một API có giới hạn 10 đơn hàng/giây.
+### Test Guest — bị block theo đúng role limit
+ 
+ ```
+ for i in {1..8}; do \ printf "Premium request %s -> " "$i"; \ curl -s -o /dev/null -w "%{http_code}\n" -H "x-user-role: guest" http://127.0.0.1:3000/demo/sliding; \ done
+ ```
 
-Kịch bản 1: Hệ thống chỉ xử lý đúng bằng giới hạn 10 đơn/giây.
-Khi vượt quá ngưỡng, các yêu cầu dư bị loại bỏ.
+![alt text](assets/guest.png)
 
-![alt text](assets/no_queue.png)
+### Test Premium — không bị block
 
-Kịch bản 2: Hệ thống được bổ sung hàng đợi (Queue) để lưu lại các đơn hàng vượt ngưỡng
-![alt text](assets/queue.png)
+```
+for i in {1..8}; do \ printf "Premium request %s -> " "$i"; \ curl -s -o /dev/null -w "%{http_code}\n" -H "x-user-role: guest" http://127.0.0.1:3000/demo/sliding; \ done
+```
+
+![alt text](assets/premium.png)
 
 ## Monitoring API & Dashboard
 ### API: /monitoring
@@ -122,7 +137,6 @@ Trả về dữ liệu realtime từ Redis:
 ```
 {
   "total": 12,
-  "byRoute": {},
   "topIps": [],
   "series": []
 }
@@ -138,19 +152,10 @@ Dashboard hiển thị:
 
 - Tổng số request bị chặn
 - Top IP bị block
-- Block theo route
 - Biểu đồ line chart theo thời gian thực (mỗi phút 1 bucket)
 
 ![alt text](assets/dashboard1.png)
 ![alt text](assets/dashboard2.png)
-
-### Test Guest — bị block theo đúng role limit
- 
-![alt text](assets/guest.png)
-
-### Test Premium — không bị block
-
-![alt text](assets/premium.png)
 
 ## 🚀 Quick Start
 
