@@ -137,7 +137,6 @@ Trả về dữ liệu realtime từ Redis:
 ```
 {
   "total": 12,
-  "byRoute": {},
   "topIps": [],
   "series": []
 }
@@ -153,7 +152,6 @@ Dashboard hiển thị:
 
 - Tổng số request bị chặn
 - Top IP bị block
-- Block theo route
 - Biểu đồ line chart theo thời gian thực (mỗi phút 1 bucket)
 
 ![alt text](assets/dashboard1.png)
