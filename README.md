@@ -49,8 +49,8 @@ src/
 
 Sơ đồ dưới đây mô tả luồng hoạt động và mối quan hệ giữa các thành phần chính trong framework Rate Limiting sau khi được tái cấu trúc với các Design Patterns.
 
-![alt text](assets/architecture-diagram.jpg)
-
+![alt text](assets/architecture-diagram2.jpg)
+*   **NGINX:** Reverse proxy.
 *   **Context (`RateLimitGuard`):** Đóng vai trò điều phối chính.
 *   **Strategy & Factory Pattern:** Cho phép đóng gói và lựa chọn linh hoạt các thuật toán (`SlidingWindow`, `TokenBucket`).
 *   **Observer Pattern:** Tách rời logic xử lý khi một request bị chặn (ví dụ: ghi log, gửi cảnh báo) thông qua hệ thống sự kiện.
@@ -62,8 +62,8 @@ Sử dụng 2000 người dùng ảo tấn công hệ thống trong liên tục 
 Kịch bản 1: Khi không có NGINX
 
 ![alt text](assets/NGINX1.png)
-
 ![alt text](assets/performance1.png)
+
 Kịch bản 2: Khi có NGINX
 
 ![alt text](assets/NGINX2.png)
