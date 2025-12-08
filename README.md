@@ -117,7 +117,11 @@ x-user-role: premium
 ### Test Guest — bị block theo đúng role limit
  
  ```
- for i in {1..8}; do \ printf "Premium request %s -> " "$i"; \ curl -s -o /dev/null -w "%{http_code}\n" -H "x-user-role: guest" http://127.0.0.1:3000/demo/sliding; \ done
+for i in {1..8}; do \
+  printf "Guest request %s -> " "$i"; \
+  curl -s -o /dev/null -w "%{http_code}\n" -H "x-user-role: guest" http://127.0.0.1:3000/demo/sliding; \
+done
+
  ```
 
 ![alt text](assets/guest.png)
@@ -125,7 +129,11 @@ x-user-role: premium
 ### Test Premium — không bị block
 
 ```
-for i in {1..8}; do \ printf "Premium request %s -> " "$i"; \ curl -s -o /dev/null -w "%{http_code}\n" -H "x-user-role: guest" http://127.0.0.1:3000/demo/sliding; \ done
+for i in {1..8}; do \
+  printf "Premium request %s -> " "$i"; \
+  curl -s -o /dev/null -w "%{http_code}\n" -H "x-user-role: premium" http://127.0.0.1:3000/demo/sliding; \
+done
+
 ```
 
 ![alt text](assets/premium.png)
