@@ -69,6 +69,17 @@ Kịch bản 2: Khi có NGINX
 ![alt text](assets/NGINX2.png)
 ![alt text](assets/performance2.png)
 
+## Request Handling Improvement with Queueing
+### Kịch bản test:
+Mô phỏng việc gửi 15 đơn hàng vào một API có giới hạn 10 đơn hàng/giây.
+
+Kịch bản 1: Hệ thống chỉ xử lý đúng bằng giới hạn 10 đơn/giây.
+Khi vượt quá ngưỡng, các yêu cầu dư bị loại bỏ.
+
+![alt text](assets/no_queue.png)
+
+Kịch bản 2: Hệ thống được bổ sung hàng đợi (Queue) để lưu lại các đơn hàng vượt ngưỡng
+![alt text](assets/queue.png)
 
 ## Dynamic Role-Based Rate Limiting
 ### Mục tiêu
@@ -118,19 +129,6 @@ for i in {1..8}; do \ printf "Premium request %s -> " "$i"; \ curl -s -o /dev/nu
 ```
 
 ![alt text](assets/premium.png)
-
-
-## Request Handling Improvement with Queueing
-### Kịch bản test:
-Mô phỏng việc gửi 15 đơn hàng vào một API có giới hạn 10 đơn hàng/giây.
-
-Kịch bản 1: Hệ thống chỉ xử lý đúng bằng giới hạn 10 đơn/giây.
-Khi vượt quá ngưỡng, các yêu cầu dư bị loại bỏ.
-
-![alt text](assets/no_queue.png)
-
-Kịch bản 2: Hệ thống được bổ sung hàng đợi (Queue) để lưu lại các đơn hàng vượt ngưỡng
-![alt text](assets/queue.png)
 
 ## Monitoring API & Dashboard
 ### API: /monitoring
