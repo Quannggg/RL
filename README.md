@@ -91,7 +91,7 @@ Ví dụ:
   "routes": {
     "GET:/demo/sliding": {
       "guest": { "limit": 5, "perSeconds": 60 },
-      "premium": { "limit": 50, "perSeconds": 60 }
+      "premium": { "limit": 100, "perSeconds": 60 }
     }
   }
 }
@@ -102,6 +102,23 @@ Role được truyền qua header:
 x-user-role: guest
 x-user-role: premium
 ```
+
+### Test Guest — bị block theo đúng role limit
+ 
+ ```
+ for i in {1..8}; do \ printf "Premium request %s -> " "$i"; \ curl -s -o /dev/null -w "%{http_code}\n" -H "x-user-role: guest" http://127.0.0.1:3000/demo/sliding; \ done
+ ```
+
+![alt text](assets/guest.png)
+
+### Test Premium — không bị block
+
+```
+for i in {1..8}; do \ printf "Premium request %s -> " "$i"; \ curl -s -o /dev/null -w "%{http_code}\n" -H "x-user-role: guest" http://127.0.0.1:3000/demo/sliding; \ done
+```
+
+![alt text](assets/premium.png)
+
 
 ## Request Handling Improvement with Queueing
 ### Kịch bản test:
@@ -143,14 +160,6 @@ Dashboard hiển thị:
 
 ![alt text](assets/dashboard1.png)
 ![alt text](assets/dashboard2.png)
-
-### Test Guest — bị block theo đúng role limit
- 
-![alt text](assets/guest.png)
-
-### Test Premium — không bị block
-
-![alt text](assets/premium.png)
 
 ## 🚀 Quick Start
 
